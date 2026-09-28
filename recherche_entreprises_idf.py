@@ -7,6 +7,9 @@ Critères appliqués :
 - Effectif salarié : 3 à 19 salariés (codes INSEE "02", "03", "11")
 - Catégorie        : PME
 - État             : entreprises actives uniquement
+- Exclusions       : associations/fondations/syndicats/administrations
+                      (via la nature juridique) et certains secteurs NAF
+                      peu propices à la prospection commerciale.
 
 Aucune valeur ci-dessus n'est devinée : elles ont été vérifiées dans le code
 source de l'API (fichiers app/labels/regions.json et
@@ -38,6 +41,10 @@ REGION_ILE_DE_FRANCE = "11"
 CATEGORIE_ENTREPRISE = "PME"
 ETAT_ADMINISTRATIF_ACTIF = "A"
 
+# Codes NAF (activité principale) à cibler. Liste vide = tous les secteurs.
+# À remplir plus tard pour cibler un métier précis, ex. ["62.01Z", "62.02A"].
+NAF_CIBLES = []
+
 # "3 à 19 salariés" ne correspond pas à un seul code INSEE : il faut combiner
 # trois tranches. On interroge donc l'API séparément pour chacune, puis on
 # fusionne les résultats (l'API ne documentant pas officiellement le
@@ -48,8 +55,24 @@ TRANCHES_EFFECTIF_3_A_19 = {
     "11": "10 à 19 salariés",
 }
 
-PER_PAGE = 25          # taille de page utilisée dans les exemples officiels de l'API
-MAX_ENTREPRISES = 300  # on veut "plusieurs centaines" de résultats, pas la totalité
+# Nature juridique (nomenclature INSEE) : le premier chiffre du code à 4
+# chiffres distingue les grandes familles de formes juridiques. On exclut
+# les personnes morales de droit administratif ("7", ex. communes,
+# départements, établissements publics), les organismes privés spécialisés
+# ("8", ex. syndicats professionnels, ordres, mutuelles) et les groupements
+# de droit privé ("9", ex. associations, fondations, syndicats de
+# copropriétaires) : ce ne sont pas des cibles de prospection commerciale.
+NATURE_JURIDIQUE_PREFIXES_EXCLUES = ("7", "8", "9")
+
+# Codes NAF à exclure : administration publique (84), action sociale sans
+# hébergement (88), activités des organisations associatives (94) — donnés
+# comme divisions à 2 chiffres, donc toutes leurs sous-classes sont
+# exclues — ainsi que les holdings (64.20Z) et sièges sociaux (70.10Z).
+CODES_NAF_DIVISIONS_EXCLUES = {"84", "88", "94"}
+CODES_NAF_EXCLUS = {"64.20Z", "70.10Z"}
+
+PER_PAGE = 25            # taille de page utilisée dans les exemples officiels de l'API
+MAX_PAR_TRANCHE = 100    # objectif de prospects retenus par tranche d'effectif
 PAUSE_ENTRE_REQUETES = 0.3  # secondes, par courtoisie envers l'API publique
 NB_TENTATIVES_MAX = 3
 
@@ -87,20 +110,34 @@ def appeler_api(params):
     raise RuntimeError(f"L'API n'a pas répondu après {NB_TENTATIVES_MAX} tentatives : {derniere_erreur}")
 
 
+def entreprise_est_prospect(entreprise):
+    """
+    Écarte les non-prospects : associations, fondations, syndicats et
+    administrations (via la nature juridique), ainsi que certains secteurs
+    NAF peu pertinents pour la prospection commerciale.
+    """
+    nature_juridique = entreprise.get("nature_juridique") or ""
+    if nature_juridique[:1] in NATURE_JURIDIQUE_PREFIXES_EXCLUES:
+        return False
+
+    code_naf = entreprise.get("activite_principale") or ""
+    if code_naf in CODES_NAF_EXCLUS or code_naf[:2] in CODES_NAF_DIVISIONS_EXCLUES:
+        return False
+
+    return True
+
+
 def recuperer_entreprises_pour_tranche(tranche_code, entreprises_par_siren):
     """
-    Récupère, page par page, toutes les entreprises correspondant à une
-    tranche d'effectif donnée, et les ajoute au dictionnaire
-    entreprises_par_siren (clé = SIREN, ce qui élimine les doublons entre
-    les différentes tranches interrogées).
-    S'arrête dès que MAX_ENTREPRISES est atteint, ou quand l'API n'a plus
-    de résultats.
+    Récupère, page par page, les entreprises correspondant à une tranche
+    d'effectif donnée, filtre les non-prospects, et ajoute les entreprises
+    retenues au dictionnaire entreprises_par_siren (clé = SIREN, ce qui
+    élimine les doublons). S'arrête dès que MAX_PAR_TRANCHE entreprises ont
+    été retenues pour CETTE tranche, ou quand l'API n'a plus de résultats.
     """
     page = 1
-    while True:
-        if len(entreprises_par_siren) >= MAX_ENTREPRISES:
-            return
-
+    retenues_pour_tranche = 0
+    while retenues_pour_tranche < MAX_PAR_TRANCHE:
         params = {
             "region": REGION_ILE_DE_FRANCE,
             "categorie_entreprise": CATEGORIE_ENTREPRISE,
@@ -109,6 +146,8 @@ def recuperer_entreprises_pour_tranche(tranche_code, entreprises_par_siren):
             "page": page,
             "per_page": PER_PAGE,
         }
+        if NAF_CIBLES:
+            params["activite_principale"] = ",".join(NAF_CIBLES)
 
         data = appeler_api(params)
         resultats_page = data.get("results", [])
@@ -116,7 +155,8 @@ def recuperer_entreprises_pour_tranche(tranche_code, entreprises_par_siren):
 
         print(
             f"  Tranche {tranche_code} ({TRANCHES_EFFECTIF_3_A_19[tranche_code]}) "
-            f"- page {page}/{total_pages} - {len(resultats_page)} entreprises reçues"
+            f"- page {page}/{total_pages} - {len(resultats_page)} entreprises reçues "
+            f"- {retenues_pour_tranche}/{MAX_PAR_TRANCHE} retenues"
         )
 
         if not resultats_page:
@@ -124,10 +164,15 @@ def recuperer_entreprises_pour_tranche(tranche_code, entreprises_par_siren):
 
         for entreprise in resultats_page:
             siren = entreprise.get("siren")
-            if siren and siren not in entreprises_par_siren:
-                entreprises_par_siren[siren] = entreprise
-                if len(entreprises_par_siren) >= MAX_ENTREPRISES:
-                    break
+            if not siren or siren in entreprises_par_siren:
+                continue
+            if not entreprise_est_prospect(entreprise):
+                continue
+
+            entreprises_par_siren[siren] = entreprise
+            retenues_pour_tranche += 1
+            if retenues_pour_tranche >= MAX_PAR_TRANCHE:
+                break
 
         if page >= total_pages:
             break
@@ -163,14 +208,14 @@ def main():
     entreprises_par_siren = {}
 
     for tranche_code in TRANCHES_EFFECTIF_3_A_19:
-        if len(entreprises_par_siren) >= MAX_ENTREPRISES:
-            break
         recuperer_entreprises_pour_tranche(tranche_code, entreprises_par_siren)
 
     lignes = [extraire_ligne_csv(e) for e in entreprises_par_siren.values()]
 
-    with open(FICHIER_SORTIE, "w", newline="", encoding="utf-8") as fichier_csv:
-        writer = csv.DictWriter(fichier_csv, fieldnames=CSV_FIELDNAMES)
+    # Séparateur ";" et encodage "utf-8-sig" : Excel en français ouvre
+    # sinon le CSV dans une seule colonne et affiche mal les accents.
+    with open(FICHIER_SORTIE, "w", newline="", encoding="utf-8-sig") as fichier_csv:
+        writer = csv.DictWriter(fichier_csv, fieldnames=CSV_FIELDNAMES, delimiter=";")
         writer.writeheader()
         writer.writerows(lignes)
 
