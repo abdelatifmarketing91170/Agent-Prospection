@@ -33,6 +33,7 @@ EXCLUS_FRANCHISE_OU_GROUPE = {
     "784611857": "filiale Groupe Laveries (domaine groupe-laveries.fr)",
     "539329565": "filiale Groupe Signorini (domaine groupesignorini.com)",
     "951289537": "marque internationale Wycon Cosmetics (domaine wyconcosmetics.com)",
+    "844075408": "exclu à la demande de l'utilisateur (réseau régional de centres d'imagerie, pas une PME isolée)",
 }
 
 
