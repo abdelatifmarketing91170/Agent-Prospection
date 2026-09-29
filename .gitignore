@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 *.csv
 mapping_sites.json
+brouillons_emails.txt
