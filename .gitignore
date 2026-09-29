@@ -3,3 +3,5 @@ __pycache__/
 *.csv
 mapping_sites.json
 brouillons_emails.txt
+brouillons_emails_filtres.txt
+suivi_envois.csv
