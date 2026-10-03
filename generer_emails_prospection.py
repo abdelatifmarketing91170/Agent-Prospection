@@ -1,13 +1,13 @@
 """
-Génère 30 emails de prospection courts et personnalisés à partir du CSV
+Génère des emails de prospection courts et personnalisés à partir du CSV
 trié par score de priorité, et les exporte dans brouillons_emails.txt.
 
 Sélection des destinataires : les emails de prospection étant destinés à
-être réellement envoyés, on prend les 30 entreprises au score de
-priorité le plus élevé PARMI celles qui ont un email_contact (impossible
-d'envoyer un email à une entreprise dont on n'a pas l'adresse — les
-scores les plus hauts du fichier correspondent justement à des
-entreprises sans aucun site, donc sans email trouvé).
+être réellement envoyés, on prend les entreprises au score de priorité
+le plus élevé PARMI celles qui ont un email_contact (impossible d'envoyer
+un email à une entreprise dont on n'a pas l'adresse — les scores les
+plus hauts du fichier correspondent justement à des entreprises sans
+aucun site, donc sans email trouvé).
 
 Conséquence : toutes les entreprises retenues ont déjà un site ET un
 email (sinon elles n'auraient pas d'email_contact), donc leur point
@@ -17,11 +17,20 @@ visible — c'est cet angle qui est utilisé dans l'accroche.
 Le secteur (à partir du code NAF) et le type de preuve à mettre en avant
 (Google Ads pour le commerce/service local, Shopify pour le commerce de
 produits qui se prête à une boutique en ligne) sont déterminés au cas
-par cas pour ces 30 entreprises précises, car un mapping générique
+par cas pour ces entreprises précises, car un mapping générique
 NAF -> secteur/preuve n'aurait pas de sens sur un jeu aussi restreint.
+
+A/B test des accroches : 3 angles réellement différents (constat
+factuel, comparaison à la concurrence, question directe), assignés de
+façon aléatoire mais équilibrée (nombre de prospects par variante aussi
+égal que possible) pour pouvoir comparer plus tard leur taux de
+conversion. La variante retenue pour chaque entreprise est indiquée
+dans le fichier de sortie (ligne "Variante :") pour être reportée dans
+suivi_envois.csv au moment de l'envoi réel.
 """
 
 import csv
+import random
 import re
 
 FICHIER_ENTREE = "entreprises_idf_pme_3_19_salaries_priorisees.csv"
@@ -62,10 +71,13 @@ SECTEUR_ET_PREUVE = {
     "840340525": ("contrôle technique/inspection", "ads"),       # C.E.S PRO CONSULT
 }
 
-ACCROCHES = [
-    "En regardant {nom}, je ne vois pas de campagne Google Ads active sur des recherches comme « {secteur} {ville} ».",
-    "J'ai cherché « {secteur} {ville} » sur Google : {nom} n'apparaît dans aucune publicité, seuls des concurrents avec des Ads sont visibles en premier.",
-    "Sur les recherches « {secteur} {ville} », {nom} n'a pas de présence publicitaire visible sur Google.",
+# 3 angles d'accroche réellement distincts (pas 3 reformulations de la
+# même phrase) : constat factuel, comparaison à la concurrence, question
+# directe. Clé = étiquette stockée dans "variante_utilisee".
+ACCROCHE_VARIANTES = [
+    ("V1_constat", "J'ai regardé la présence Google Ads de {nom} sur « {secteur} {ville} » : aucune campagne active."),
+    ("V2_concurrence", "Sur « {secteur} {ville} », ce sont vos concurrents qui tournent sur Google Ads — pas {nom}."),
+    ("V3_question", "Une question simple : qui voit-on avant {nom} quand on cherche « {secteur} {ville} » sur Google ?"),
 ]
 
 PREUVES_ADS = [
@@ -91,19 +103,35 @@ CTA = [
 DESINSCRIPTION = "Pour vous désabonner de ces emails, répondez « STOP » à ce message."
 SIGNATURE = "A.S.Digital"
 
+# Objet personnalisé et court : nom de l'entreprise + angle de recherche
+# locale, pour donner envie d'ouvrir sans être trompeur sur le contenu.
+SUJET_TEMPLATE = "{nom} : invisible sur « {secteur} {ville} »"
+
 
 def extraire_ville(adresse):
     match = re.search(r"\d{5}\s+(.+)$", adresse)
     return match.group(1).title() if match else ""
 
 
-def generer_email(index, ligne):
-    siren = ligne["siren"]
-    secteur, type_preuve = SECTEUR_ET_PREUVE[siren]
-    nom = ligne["nom"]
-    ville = extraire_ville(ligne["adresse"])
+def assigner_variantes(n):
+    """Répartit n destinataires sur les 3 variantes d'accroche de façon
+    aléatoire mais équilibrée (tailles aussi égales que possible), pour
+    un vrai test A/B/C plutôt qu'un tirage qui pourrait sur-représenter
+    une variante par hasard."""
+    cles = [cle for cle, _ in ACCROCHE_VARIANTES]
+    pool = (cles * ((n // len(cles)) + 1))[:n]
+    random.shuffle(pool)
+    return pool
 
-    accroche = ACCROCHES[index % len(ACCROCHES)].format(nom=nom, secteur=secteur, ville=ville)
+
+def generer_sujet(ligne, secteur, ville):
+    return SUJET_TEMPLATE.format(nom=ligne["nom"], secteur=secteur, ville=ville)
+
+
+def generer_corps(index, ligne, variante_cle, secteur, ville, type_preuve):
+    accroche_template = dict(ACCROCHE_VARIANTES)[variante_cle]
+    accroche = accroche_template.format(nom=ligne["nom"], secteur=secteur, ville=ville)
+
     if type_preuve == "shopify":
         preuve = PREUVES_SHOPIFY[index % len(PREUVES_SHOPIFY)].format(secteur=secteur)
     else:
@@ -111,8 +139,8 @@ def generer_email(index, ligne):
     proposition = PROPOSITIONS[index % len(PROPOSITIONS)]
     cta = CTA[index % len(CTA)]
 
-    corps = "\n".join([
-        f"Bonjour,",
+    return "\n".join([
+        "Bonjour,",
         accroche,
         preuve,
         proposition,
@@ -122,7 +150,6 @@ def generer_email(index, ligne):
         "",
         DESINSCRIPTION,
     ])
-    return corps
 
 
 def main():
@@ -139,17 +166,31 @@ def main():
     if manquants:
         raise SystemExit(f"Secteur non renseigné pour : {manquants}")
 
+    variantes = assigner_variantes(len(destinataires))
+
     blocs = []
     for i, ligne in enumerate(destinataires):
-        entete = f"Destinataire : {ligne['nom']} <{ligne['email_contact']}>"
-        corps = generer_email(i, ligne)
+        secteur, type_preuve = SECTEUR_ET_PREUVE[ligne["siren"]]
+        ville = extraire_ville(ligne["adresse"])
+        variante_cle = variantes[i]
+
+        sujet = generer_sujet(ligne, secteur, ville)
+        corps = generer_corps(i, ligne, variante_cle, secteur, ville, type_preuve)
+
+        entete = (
+            f"Destinataire : {ligne['nom']} <{ligne['email_contact']}>\n"
+            f"Objet : {sujet}\n"
+            f"Variante : {variante_cle}"
+        )
         blocs.append(entete + "\n\n" + corps)
 
     with open(FICHIER_SORTIE, "w", encoding="utf-8") as f:
         f.write(("\n\n" + "=" * 60 + "\n\n").join(blocs))
         f.write("\n")
 
+    repartition = {cle: variantes.count(cle) for cle, _ in ACCROCHE_VARIANTES}
     print(f"{len(destinataires)} emails générés dans {FICHIER_SORTIE}")
+    print("Répartition des variantes :", repartition)
 
 
 if __name__ == "__main__":
