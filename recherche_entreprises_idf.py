@@ -18,6 +18,8 @@ car cette API utilise des codes précis et non des bornes libres.
 """
 
 import csv
+import json
+import os
 import time
 
 import requests
@@ -87,6 +89,13 @@ CSV_FIELDNAMES = [
 
 FICHIER_SORTIE = "entreprises_idf_pme_3_19_salaries.csv"
 
+# Point de reprise : sauvegardé après chaque page récupérée, pour ne pas
+# repartir de zéro si le script est interrompu (coupure réseau, quota,
+# arrêt manuel...). Au redémarrage, les entreprises déjà collectées sont
+# rechargées et les tranches déjà complètes (>= MAX_PAR_TRANCHE) sont
+# sautées entièrement.
+FICHIER_ETAT = "etat_recherche_entreprises.json"
+
 
 def appeler_api(params):
     """
@@ -127,6 +136,18 @@ def entreprise_est_prospect(entreprise):
     return True
 
 
+def charger_etat():
+    if os.path.exists(FICHIER_ETAT):
+        with open(FICHIER_ETAT, encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+def sauvegarder_etat(entreprises_par_siren):
+    with open(FICHIER_ETAT, "w", encoding="utf-8") as f:
+        json.dump(entreprises_par_siren, f, ensure_ascii=False)
+
+
 def recuperer_entreprises_pour_tranche(tranche_code, entreprises_par_siren):
     """
     Récupère, page par page, les entreprises correspondant à une tranche
@@ -134,9 +155,22 @@ def recuperer_entreprises_pour_tranche(tranche_code, entreprises_par_siren):
     retenues au dictionnaire entreprises_par_siren (clé = SIREN, ce qui
     élimine les doublons). S'arrête dès que MAX_PAR_TRANCHE entreprises ont
     été retenues pour CETTE tranche, ou quand l'API n'a plus de résultats.
+
+    Reprise sur coupure : si le dictionnaire contient déjà des entreprises
+    de cette tranche (rechargées depuis FICHIER_ETAT), on repart de la
+    page 1 mais les SIREN déjà connus sont simplement ignorés (dédoublonnage
+    naturel) — on ne refait donc payer que les nouvelles pages nécessaires
+    pour compléter la tranche, jamais tout le travail déjà fait.
     """
+    retenues_pour_tranche = sum(
+        1 for e in entreprises_par_siren.values()
+        if e.get("tranche_effectif_salarie") == tranche_code
+    )
+    if retenues_pour_tranche >= MAX_PAR_TRANCHE:
+        print(f"  Tranche {tranche_code} ({TRANCHES_EFFECTIF_3_A_19[tranche_code]}) déjà complète (reprise) — ignorée.")
+        return
+
     page = 1
-    retenues_pour_tranche = 0
     while retenues_pour_tranche < MAX_PAR_TRANCHE:
         params = {
             "region": REGION_ILE_DE_FRANCE,
@@ -174,6 +208,8 @@ def recuperer_entreprises_pour_tranche(tranche_code, entreprises_par_siren):
             if retenues_pour_tranche >= MAX_PAR_TRANCHE:
                 break
 
+        sauvegarder_etat(entreprises_par_siren)
+
         if page >= total_pages:
             break
 
@@ -205,7 +241,9 @@ def extraire_ligne_csv(entreprise):
 
 
 def main():
-    entreprises_par_siren = {}
+    entreprises_par_siren = charger_etat()
+    if entreprises_par_siren:
+        print(f"Reprise : {len(entreprises_par_siren)} entreprises déjà collectées dans {FICHIER_ETAT}.\n")
 
     for tranche_code in TRANCHES_EFFECTIF_3_A_19:
         recuperer_entreprises_pour_tranche(tranche_code, entreprises_par_siren)
