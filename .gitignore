@@ -14,3 +14,13 @@ recherche_sites_etat.json
 lots_recherche/
 surveillance_statut.json
 etat_recherche_entreprises_france.json
+etat_enrichissement_france.json
+recherche_sites_etat_france.json
+lots_recherche_france/
+brouillons_emails_france.txt
+emails_france.json
+threads_suivi_france.json
+suivi_france.csv
+suivi_france_quotidien.csv
+reponses_traitees_france.json
+relances_envoyees_france.json
