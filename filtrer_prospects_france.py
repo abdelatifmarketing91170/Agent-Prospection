@@ -23,7 +23,7 @@ import json
 FICHIER_ENTREE = "emails_france.json"
 FICHIER_SORTIE = "emails_france_filtres.json"
 
-PREFIXES_INTERDITS = ("dpo@", "privacy@", "recrutement@", "rh@", "juridique@")
+PREFIXES_INTERDITS = ("dpo@", "privacy@", "recrutement@", "rh@", "juridique@", "rgpd@")
 
 # siren -> raison de l'exclusion
 EXCLUS_FRANCHISE_OU_GROUPE = {
@@ -41,6 +41,8 @@ EXCLUS_FRANCHISE_OU_GROUPE = {
     "652047416": "réseau immobilier Primo (lesagencesprimo.com)",
     "326911369": "franchise (le nom de l'entreprise contient \"Franchise Distribution\")",
     "487862997": "réseau immobilier Swixim",
+    "979239852": "filiale du groupe international Eurofins Scientific (laboratoires)",
+    "493759880": "réseau Taxis du Haut Pays (domaine groupe-hautpays.fr)",
 }
 
 
