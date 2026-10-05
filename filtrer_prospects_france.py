@@ -43,12 +43,31 @@ EXCLUS_FRANCHISE_OU_GROUPE = {
     "487862997": "réseau immobilier Swixim",
     "979239852": "filiale du groupe international Eurofins Scientific (laboratoires)",
     "493759880": "réseau Taxis du Haut Pays (domaine groupe-hautpays.fr)",
+    "784655862": "mission diplomatique (Ambassade du Portugal), pas un prospect commercial",
+    "538269002": "société d'économie mixte locale (entité publique-privée, pas une PME indépendante)",
 }
+
+# Contacts déjà présents dans la campagne IDF (threads_suivi.json) : l'extraction
+# nationale n'exclut pas la région Île-de-France, donc certaines entreprises déjà
+# démarchées et suivies individuellement (threads_suivi.json / suivi_envois.csv)
+# réapparaissent dans le lot national. On ne les recontacte jamais depuis la
+# campagne France.
+FICHIER_THREADS_IDF = "threads_suivi.json"
+
+
+def emails_deja_contactes_idf():
+    try:
+        with open(FICHIER_THREADS_IDF, encoding="utf-8") as f:
+            return set(json.load(f).keys())
+    except FileNotFoundError:
+        return set()
 
 
 def main():
     with open(FICHIER_ENTREE, encoding="utf-8") as f:
         emails = json.load(f)
+
+    deja_contactes = emails_deja_contactes_idf()
 
     conserves = []
     for item in emails:
@@ -57,6 +76,9 @@ def main():
             continue
         if item["siren"] in EXCLUS_FRANCHISE_OU_GROUPE:
             print(f"EXCLU (franchise/groupe)  : {item['nom']} <{item['email']}> — {EXCLUS_FRANCHISE_OU_GROUPE[item['siren']]}")
+            continue
+        if item["email"] in deja_contactes:
+            print(f"EXCLU (déjà en campagne IDF) : {item['nom']} <{item['email']}>")
             continue
         conserves.append(item)
 

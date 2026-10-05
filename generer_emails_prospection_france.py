@@ -35,6 +35,18 @@ ACCROCHE_VARIANTES = [
     ("V3_question", "Une question simple : qui voit-on avant {nom} quand on cherche « {secteur} {ville} » sur Google ?"),
 ]
 
+# Variante sans mention de secteur, utilisée quand secteurs_naf.py retombe sur le
+# libellé générique "votre secteur" : citer "« votre secteur Ville »" comme si
+# c'était un intitulé d'activité sonne artificiel, donc on reformule autour de la
+# ville seule plutôt que de forcer le secteur dans le gabarit normal.
+ACCROCHE_VARIANTES_SANS_SECTEUR = {
+    "V1_constat": "J'ai regardé la présence Google Ads de {nom} à {ville} : aucune campagne active.",
+    "V2_concurrence": "À {ville}, ce sont vos concurrents qui tournent sur Google Ads — pas {nom}.",
+    "V3_question": "Une question simple : qui voit-on avant {nom} quand on cherche votre activité à {ville} sur Google ?",
+}
+PREUVE_SANS_SECTEUR = "Sur nos dossiers récents, nos campagnes Google Ads Search tournent à 8-9% de CTR, contre 2-3% de moyenne sur le secteur."
+SUJET_SANS_SECTEUR = "{nom} : votre présence en ligne à {ville}"
+
 PREUVES_ADS = [
     "Sur des dossiers {secteur}, nos campagnes Google Ads Search tournent à 8-9% de CTR, contre 2-3% de moyenne sur le secteur.",
     "En {secteur}, on obtient en général 8-9% de CTR sur Search, contre 2-3% pour la moyenne du secteur.",
@@ -73,10 +85,20 @@ def assigner_variantes(n):
 
 
 def generer_sujet(nom, secteur, ville):
+    if secteur == "votre secteur":
+        return SUJET_SANS_SECTEUR.format(nom=nom, ville=ville)
     return SUJET_TEMPLATE.format(nom=nom, secteur=secteur, ville=ville)
 
 
 def generer_corps(index, nom, variante_cle, secteur, ville, type_preuve):
+    if secteur == "votre secteur":
+        accroche = ACCROCHE_VARIANTES_SANS_SECTEUR[variante_cle].format(nom=nom, ville=ville)
+        proposition = PROPOSITIONS[index % len(PROPOSITIONS)]
+        cta = CTA[index % len(CTA)]
+        return "\n".join([
+            "Bonjour,", accroche, PREUVE_SANS_SECTEUR, proposition, cta, "", SIGNATURE, "", DESINSCRIPTION,
+        ])
+
     accroche_template = dict(ACCROCHE_VARIANTES)[variante_cle]
     accroche = accroche_template.format(nom=nom, secteur=secteur, ville=ville)
 
