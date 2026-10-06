@@ -45,6 +45,7 @@ EXCLUS_FRANCHISE_OU_GROUPE = {
     "493759880": "réseau Taxis du Haut Pays (domaine groupe-hautpays.fr)",
     "784655862": "mission diplomatique (Ambassade du Portugal), pas un prospect commercial",
     "538269002": "société d'économie mixte locale (entité publique-privée, pas une PME indépendante)",
+    "490072337": "réseau immobilier CIMM Immobilier (nom commercial \"CIMM GESTION\")",
 }
 
 # Contacts déjà présents dans la campagne IDF (threads_suivi.json) : l'extraction
