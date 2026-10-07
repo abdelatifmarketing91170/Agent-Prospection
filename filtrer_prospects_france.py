@@ -46,6 +46,7 @@ EXCLUS_FRANCHISE_OU_GROUPE = {
     "784655862": "mission diplomatique (Ambassade du Portugal), pas un prospect commercial",
     "538269002": "société d'économie mixte locale (entité publique-privée, pas une PME indépendante)",
     "490072337": "réseau immobilier CIMM Immobilier (nom commercial \"CIMM GESTION\")",
+    "887703429": "centre de formation Formapi, réseau adossé aux Chambres de Commerce et d'Industrie (structure para-publique)",
 }
 
 # Contacts déjà présents dans la campagne IDF (threads_suivi.json) : l'extraction
