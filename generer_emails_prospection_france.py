@@ -22,6 +22,7 @@ import csv
 import json
 import random
 import re
+import urllib.parse
 
 from secteurs_naf import secteur_pour_code_naf
 
@@ -75,6 +76,13 @@ SUJET_TEMPLATE = "{nom} : invisible sur « {secteur} {ville} »"
 def extraire_ville(adresse):
     match = re.search(r"\d{5}\s+(.+)$", adresse)
     return match.group(1).title() if match else ""
+
+
+def nettoyer_email(email):
+    # Certains sites obfusquent leur mailto en encodage pourcent (%63%6f...)
+    # pour gêner les robots : on décode pour obtenir une adresse exploitable.
+    decode = urllib.parse.unquote(email)
+    return decode if "@" in decode else email
 
 
 def assigner_variantes(n):
@@ -145,7 +153,7 @@ def main():
         emails.append({
             "siren": ligne["siren"],
             "nom": nom,
-            "email": ligne["email_contact"],
+            "email": nettoyer_email(ligne["email_contact"]),
             "secteur": secteur,
             "variante": variante_cle,
             "objet": sujet,
