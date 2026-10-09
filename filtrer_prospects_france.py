@@ -47,6 +47,8 @@ EXCLUS_FRANCHISE_OU_GROUPE = {
     "538269002": "société d'économie mixte locale (entité publique-privée, pas une PME indépendante)",
     "490072337": "réseau immobilier CIMM Immobilier (nom commercial \"CIMM GESTION\")",
     "887703429": "centre de formation Formapi, réseau adossé aux Chambres de Commerce et d'Industrie (structure para-publique)",
+    "813678679": "réseau immobilier Vaneau (email vaneau@... sur le domaine de l'agence)",
+    "977497551": "franchise explicite \"by Selforme\" (nom commercial affiché comme marque de réseau)",
 }
 
 # Contacts déjà présents dans la campagne IDF (threads_suivi.json) : l'extraction
