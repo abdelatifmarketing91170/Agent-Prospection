@@ -49,6 +49,8 @@ EXCLUS_FRANCHISE_OU_GROUPE = {
     "887703429": "centre de formation Formapi, réseau adossé aux Chambres de Commerce et d'Industrie (structure para-publique)",
     "813678679": "réseau immobilier Vaneau (email vaneau@... sur le domaine de l'agence)",
     "977497551": "franchise explicite \"by Selforme\" (nom commercial affiché comme marque de réseau)",
+    "928087618": "filiale du groupe international Orbico (distribution de marques, multinational croate)",
+    "752591685": "réseau national de soutien scolaire Anacours (nom commercial \"Anacours Annecy\")",
 }
 
 # Contacts déjà présents dans la campagne IDF (threads_suivi.json) : l'extraction
