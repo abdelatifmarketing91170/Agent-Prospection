@@ -51,6 +51,7 @@ EXCLUS_FRANCHISE_OU_GROUPE = {
     "977497551": "franchise explicite \"by Selforme\" (nom commercial affiché comme marque de réseau)",
     "928087618": "filiale du groupe international Orbico (distribution de marques, multinational croate)",
     "752591685": "réseau national de soutien scolaire Anacours (nom commercial \"Anacours Annecy\")",
+    "845213628": "réseau de centres de médecine esthétique/laser Centre Galien",
 }
 
 # Contacts déjà présents dans la campagne IDF (threads_suivi.json) : l'extraction
