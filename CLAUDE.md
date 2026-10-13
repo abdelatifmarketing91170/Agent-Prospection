@@ -62,9 +62,10 @@ Vérifier l'adresse contre **suivi_envois.csv ET suivi_france.csv** (les deux ca
 ## Envoi
 
 - Montée en charge : 10 mails/jour les 3 premiers jours, 20/jour les 4 jours suivants, puis 30/jour (relances comprises).
+- Jours d'envoi : du lundi au vendredi (jours ouvrés uniquement).
 - Fenêtre horaire : 8h30–10h30.
 - Espacement : 3 à 4 minutes entre deux envois.
-- Mail court, vouvoiement, **moins de 90 mots**, ton sobre.
+- Mail court, vouvoiement, **75 à 100 mots (jamais moins de 70)**, ton sobre.
 - Signature :
   ```
   Abdelatif Senhaji
@@ -72,6 +73,12 @@ Vérifier l'adresse contre **suivi_envois.csv ET suivi_france.csv** (les deux ca
   Pour ne plus recevoir de message, répondez STOP.
   ```
   Pas de numéro de téléphone.
+
+## Format HTML
+
+- Mise en forme HTML sobre : en-tête léger avec le nom A.S.Digital, signature avec mise en forme propre (gras/espacement, pas de tableau complexe).
+- **Jamais d'image** : ni en pièce jointe, ni dans le corps du mail (dégrade la délivrabilité).
+- Deux squelettes (un sobre, un plus visuel) validés par l'utilisateur avant toute application — ne pas improviser une troisième variante sans validation.
 
 ## Reprise sur interruption
 
@@ -105,7 +112,7 @@ Tout stopper et écrire **ALERTE.txt** si :
 - Réponses d'absence (auto-reply) → ignorer.
 - Réponse positive ou question → **ne jamais répondre soi-même** ; écrire dans **A_TRAITER.txt** et arrêter les relances pour ce prospect.
 - Rebonds → retirer l'adresse.
-- Maximum 2 relances, dans le même fil, avec un angle nouveau à chaque fois.
+- Maximum 4 relances, dans le même fil, espacées de 4-5 jours, chacune avec un angle différent de la précédente.
 
 ## Fichiers de suivi
 
