@@ -212,29 +212,34 @@ def tester_observations(url_finale, html):
     return echecs
 
 
+COMPLEMENT_AUDIT_DETAILLE = "L'audit couvre votre fiche Google, vos réseaux sociaux et votre site, avec des recommandations classées par priorité."
+
+
 def choisir_competence(cle_observation, html):
     html_minuscule = html.lower()
     if any(marqueur in html_minuscule for marqueur in MARQUEURS_BOUTIQUE):
-        return COMPETENCE_SHOPIFY, PROPOSITION_SHOPIFY
+        return COMPETENCE_SHOPIFY, PROPOSITION_SHOPIFY, True
 
     if cle_observation in ("https_absent", "pas_viewport", "copyright_ancien"):
-        return COMPETENCE_REFONTE, PROPOSITION_REFONTE
+        return COMPETENCE_REFONTE, PROPOSITION_REFONTE, True
 
-    return COMPETENCE_ADS, PROPOSITION_CONTACT
+    return COMPETENCE_ADS, PROPOSITION_CONTACT, False
 
 
 def compter_mots(texte):
     return len(texte.split())
 
 
-def construire_corps(salutation, observation_texte, competence_texte, proposition_texte):
+def construire_corps(salutation, observation_texte, competence_texte, proposition_texte, ajouter_complement):
     paragraphes = [salutation, observation_texte, competence_texte, proposition_texte]
+    if ajouter_complement:
+        paragraphes.append(COMPLEMENT_AUDIT_DETAILLE)
     corps = "\n\n".join(paragraphes)
     nb_mots = compter_mots(corps)
 
     if nb_mots > 100 and "," in proposition_texte:
         proposition_courte = proposition_texte.split(",")[0] + "."
-        paragraphes[-1] = proposition_courte
+        paragraphes[3] = proposition_courte
         corps = "\n\n".join(paragraphes)
         nb_mots = compter_mots(corps)
 
@@ -249,7 +254,9 @@ def contient_mot_interdit(texte):
     return any(mot in texte_minuscule for mot in MOTS_INTERDITS)
 
 
-def corps_en_html(salutation, observation_texte, competence_texte, proposition_texte):
+def corps_en_html(salutation, observation_texte, competence_texte, proposition_texte, complement_texte=None):
+    complement_html = f'<p style="margin: 0 0 12px 0;">{complement_texte}</p>' if complement_texte else ""
+    marge_proposition = "0 0 12px 0" if complement_texte else "0 0 20px 0"
     return (
         '<div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; '
         'color: #222222; line-height: 1.5; max-width: 560px;">'
@@ -257,7 +264,8 @@ def corps_en_html(salutation, observation_texte, competence_texte, proposition_t
         f'<p style="margin: 0 0 12px 0;">{salutation}</p>'
         f'<p style="margin: 0 0 12px 0;">{observation_texte}</p>'
         f'<p style="margin: 0 0 12px 0;">{competence_texte}</p>'
-        f'<p style="margin: 0 0 20px 0;">{proposition_texte}</p>'
+        f'<p style="margin: {marge_proposition};">{proposition_texte}</p>'
+        f'{complement_html}'
         '<p style="margin: 0; font-size: 13px; color: #444444;">'
         "Abdelatif Senhaji<br>"
         "A.S.Digital — SIREN 979 115 862<br>"
@@ -305,9 +313,11 @@ def traiter_contact(contact, etat_observations):
     etat_observations[email]["observations_utilisees"].append(cle)
 
     salutation = generer_salutation(siren)
-    competence_texte, proposition_texte = choisir_competence(cle, html)
+    competence_texte, proposition_texte, ajouter_complement = choisir_competence(cle, html)
 
-    corps, nb_mots = construire_corps(salutation, observation_texte, competence_texte, proposition_texte)
+    corps, nb_mots = construire_corps(
+        salutation, observation_texte, competence_texte, proposition_texte, ajouter_complement
+    )
     if corps is None:
         return {
             "nom": nom, "email": email, "objet": "", "corps_html": "",
@@ -322,8 +332,10 @@ def traiter_contact(contact, etat_observations):
             "statut": "rejeté (expression interdite)",
         }
 
-    objet = f"Audit gratuit de présence en ligne — {nom}"
-    corps_html = corps_en_html(salutation, observation_texte, competence_texte, proposition_texte)
+    nom_sans_parenthese = nom.split("(")[0].strip()
+    objet = f"Audit gratuit de présence en ligne — {nom_sans_parenthese}"
+    complement_texte = COMPLEMENT_AUDIT_DETAILLE if ajouter_complement else None
+    corps_html = corps_en_html(salutation, observation_texte, competence_texte, proposition_texte, complement_texte)
 
     return {
         "nom": nom, "email": email, "objet": objet, "corps_html": corps_html,
