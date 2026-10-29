@@ -7,7 +7,8 @@ Ce fichier est le brief de référence pour toute action de prospection par emai
 - Abdelatif Senhaji, consultant en publicité en ligne.
 - A.S.Digital, SIREN 979 115 862.
 - Adresse d'envoi dédiée : **asdigital.prospection@gmail.com**.
-- **Ne jamais envoyer depuis abdelatif.marketing@gmail.com** (ancienne adresse, campagnes IDF/France précédentes — terminées, ne pas y toucher).
+- **Règle permanente** : TOUS les envois, premiers mails et relances, IDF comme France, partent de **asdigital.prospection@gmail.com**. **Jamais** de abdelatif.marketing@gmail.com, qui ne sert plus qu'à lire les réponses reçues sur les anciens fils.
+- Une relance est **toujours un nouveau fil** avec l'objet « Audit gratuit de présence en ligne — {NOM} » (nom avant la première parenthèse), **sans « Re: »**. Plus de suivi de thread_id nécessaire pour les relances.
 
 ## Ce qui peut être affirmé (preuves réelles, seules utilisables)
 
