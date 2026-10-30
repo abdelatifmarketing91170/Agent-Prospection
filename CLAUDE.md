@@ -14,7 +14,11 @@ Exclusion stricte, jamais de premier mail ni de relance, pour tout prospect rele
 
 Statut à appliquer : **"exclu (éthique)"**.
 
-Cas gris, à ne jamais contacter sans validation explicite de l'utilisateur au préalable : assurance, banque, gestion de patrimoine et investissement, restaurants, hôtels, bars-restaurants. Les mettre de côté (statut "en attente (cas gris, à trancher)") et signaler la liste à l'utilisateur.
+Restaurants et hôtels : autorisés, sauf bars, caves, pubs, brasseries, discothèques et tout établissement dont l'alcool est l'activité principale (exclus, statut "exclu (éthique)").
+
+Gestion de patrimoine et investissement : exclus (statut "exclu (éthique)").
+
+Assurance, banque : jamais de premier mail ni de relance sans validation explicite de l'utilisateur au préalable. Les mettre de côté (statut "en attente (cas gris, à trancher)") et signaler la liste à l'utilisateur.
 
 Cette règle s'applique à tous les lots futurs, premiers mails comme relances, y compris dans les scripts de sourcing/filtrage (`filtrer_prospects*.py`, `personaliser.py`). Pas de colonne NAF disponible dans les fichiers de suivi actuels : filtrer sur les mots-clés du nom et du nom de domaine, et sur le NAF quand il est disponible dans les données sources.
 
