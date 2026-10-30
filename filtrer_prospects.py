@@ -19,6 +19,22 @@ FICHIER_SORTIE = "brouillons_emails_filtres.txt"
 
 PREFIXES_INTERDITS = ("dpo@", "privacy@", "recrutement@", "rh@", "juridique@")
 
+# Règle d'éthique permanente (CLAUDE.md) : exclusion stricte par mots-clés sur le
+# nom et le nom de domaine, faute de colonne NAF dans les sources actuelles.
+MOTS_CLES_ETHIQUE_INTERDIT = (
+    "cave", "cellier", "vin ", "vins", "oenolog", "brasserie", "vignoble", "domaine viticole",
+    "vape", "cigarette electronique", "e-liquide", "tabac",
+    "cbd", "chanvre",
+    "casino", "paris sportif", "jeux d'argent", "loterie",
+    "voyance", "voyant", "astrolog", "tarot", "medium",
+    "credit", "courtier en pret", "pret immobilier", "rachat de credit",
+)
+
+
+def contient_mot_cle_ethique(nom, domaine):
+    texte = f"{nom} {domaine}".lower()
+    return any(mot in texte for mot in MOTS_CLES_ETHIQUE_INTERDIT)
+
 # siren -> raison de l'exclusion (franchise / filiale de grand groupe)
 EXCLUS_FRANCHISE_OU_GROUPE = {
     "428616577": "EXA Infrastructure : filiale d'un grand groupe européen de télécoms/fibre",
@@ -61,6 +77,10 @@ def main():
             continue
         if siren in EXCLUS_FRANCHISE_OU_GROUPE:
             print(f"EXCLU (franchise/groupe)    : {nom} <{email}> — {EXCLUS_FRANCHISE_OU_GROUPE[siren]}")
+            continue
+        domaine = email.split("@")[-1]
+        if contient_mot_cle_ethique(nom, domaine):
+            print(f"EXCLU (éthique)             : {nom} <{email}>")
             continue
 
         conserves.append((nom, email, bloc))

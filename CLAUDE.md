@@ -2,6 +2,22 @@
 
 Ce fichier est le brief de référence pour toute action de prospection par email dans ce dépôt. À relire au début de chaque session touchant à la prospection. Les contrôles ci-dessous s'appliquent automatiquement, sans relecture humaine préalable de chaque mail — c'est à l'agent de les faire respecter.
 
+## RÈGLE D'ÉTHIQUE PERMANENTE (prioritaire sur toute autre règle)
+
+Exclusion stricte, jamais de premier mail ni de relance, pour tout prospect relevant de :
+- alcool (caves, bars, vignobles, brasseries — NAF 47.25Z, 56.30Z, 46.34Z, 11.xx)
+- tabac et vape (NAF 47.26Z)
+- CBD
+- jeux d'argent (NAF 92.00Z)
+- voyance, astrologie, tarot, médiums
+- prêt et crédit (NAF 64.92Z, 66.19B, courtiers en prêts)
+
+Statut à appliquer : **"exclu (éthique)"**.
+
+Cas gris, à ne jamais contacter sans validation explicite de l'utilisateur au préalable : assurance, banque, gestion de patrimoine et investissement, restaurants, hôtels, bars-restaurants. Les mettre de côté (statut "en attente (cas gris, à trancher)") et signaler la liste à l'utilisateur.
+
+Cette règle s'applique à tous les lots futurs, premiers mails comme relances, y compris dans les scripts de sourcing/filtrage (`filtrer_prospects*.py`, `personaliser.py`). Pas de colonne NAF disponible dans les fichiers de suivi actuels : filtrer sur les mots-clés du nom et du nom de domaine, et sur le NAF quand il est disponible dans les données sources.
+
 ## Identité
 
 - Abdelatif Senhaji, consultant en publicité en ligne.
@@ -106,6 +122,14 @@ Tout stopper et écrire **ALERTE.txt** si :
 - plus de 5 % de rebonds sur les 50 derniers envois
 - un signalement de spam
 - un avertissement ou une limitation de Gmail
+
+## Objet du mail
+
+Si le nom du prospect est un nom de personne ou une raison sociale peu parlante (ex. « GOUDY » pour cote-immobilier.com), utiliser le nom de domaine sans extension à la place du nom dans l'objet « Audit gratuit de présence en ligne — {NOM} ».
+
+## Numéro de relance avant le message final
+
+Avant d'envoyer le texte de relance 4 (dernier message), compter tous les mails déjà envoyés à ce prospect en vérifiant Gmail (pas seulement le statut du fichier de suivi, qui peut être erroné) — adresse par adresse, toutes boîtes confondues. N'envoyer le texte de relance 4 que si c'est réellement la 4e relance ; sinon envoyer le texte du numéro réellement dû.
 
 ## Réponses et suivi
 

@@ -25,6 +25,22 @@ FICHIER_SORTIE = "emails_france_filtres.json"
 
 PREFIXES_INTERDITS = ("dpo@", "privacy@", "recrutement@", "rh@", "juridique@", "rgpd@")
 
+# Règle d'éthique permanente (CLAUDE.md) : exclusion stricte par mots-clés sur le
+# nom et le nom de domaine, faute de colonne NAF dans les sources actuelles.
+MOTS_CLES_ETHIQUE_INTERDIT = (
+    "cave", "cellier", "vin ", "vins", "oenolog", "brasserie", "vignoble", "domaine viticole",
+    "vape", "cigarette electronique", "e-liquide", "tabac",
+    "cbd", "chanvre",
+    "casino", "paris sportif", "jeux d'argent", "loterie",
+    "voyance", "voyant", "astrolog", "tarot", "medium",
+    "credit", "courtier en pret", "pret immobilier", "rachat de credit",
+)
+
+
+def contient_mot_cle_ethique(nom, domaine):
+    texte = f"{nom} {domaine}".lower()
+    return any(mot in texte for mot in MOTS_CLES_ETHIQUE_INTERDIT)
+
 # siren -> raison de l'exclusion
 EXCLUS_FRANCHISE_OU_GROUPE = {
     "428616577": "EXA Infrastructure : filiale d'un grand groupe européen de télécoms/fibre",
@@ -86,6 +102,10 @@ def main():
             continue
         if item["email"] in deja_contactes:
             print(f"EXCLU (déjà en campagne IDF) : {item['nom']} <{item['email']}>")
+            continue
+        domaine = item["email"].split("@")[-1]
+        if contient_mot_cle_ethique(item["nom"], domaine):
+            print(f"EXCLU (éthique)          : {item['nom']} <{item['email']}>")
             continue
         conserves.append(item)
 

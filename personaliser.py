@@ -113,7 +113,7 @@ def charger_restants():
     eligibles_emails = []
     for email, dates in historique_relances.items():
         statut = statut_par_email.get(email, "")
-        if statut.startswith("exclu") or statut in ("désabonné", "rebond (adresse retirée)", "pas intéressé", "échec envoi (adresse invalide)"):
+        if statut.startswith("exclu") or statut.startswith("en attente") or statut.startswith("rebond") or statut in ("désabonné", "pas intéressé", "échec envoi (adresse invalide)"):
             continue
         if len(dates) >= MAX_RELANCES:
             continue
